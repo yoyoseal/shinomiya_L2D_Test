@@ -3,7 +3,7 @@
 	"FileReferences": {
 		"Moc": "shinomiya.moc3",
 		"Textures": [
-			"model/texture_00.png"
+			"textures/texture_00.png"
 		],
 		"Physics": "shinomiya.physics3.json",
 		"DisplayInfo": "shinomiya.cdi3.json"
