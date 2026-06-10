@@ -12,30 +12,57 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: transparent;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+    }
+
+    #status {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      z-index: 10;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid #666;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
     }
 
     #live2d-canvas {
       width: 100vw;
       height: 100vh;
       display: block;
+      outline: 1px solid #555;
     }
   </style>
 </head>
 
 <body>
+  <div id="status">正在準備 Live2D...</div>
   <canvas id="live2d-canvas"></canvas>
 
-  <!-- Live2D Cubism Core -->
   <script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
-
-  <!-- PIXI -->
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
-
-  <!-- PIXI Live2D Display -->
   <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display/dist/index.min.js"></script>
 
   <script>
+    const statusBox = document.getElementById("status");
+
+    function setStatus(text) {
+      statusBox.textContent = text;
+      console.log(text);
+    }
+
+    window.onerror = function(message, source, lineno, colno, error) {
+      setStatus(
+        "JavaScript 錯誤：\n" +
+        message + "\n\n" +
+        "位置：" + source + ":" + lineno + ":" + colno
+      );
+    };
+
     const app = new PIXI.Application({
       view: document.getElementById("live2d-canvas"),
       resizeTo: window,
@@ -46,25 +73,44 @@
     let model;
 
     async function initLive2D() {
-      model = await PIXI.live2d.Live2DModel.from("./model/shinomiya.model3.json");
+      try {
+        setStatus("正在載入模型...");
 
-      app.stage.addChild(model);
+        // 這一行要改成你的 model3.json 實際檔名
+        model = await PIXI.live2d.Live2DModel.from("./model/shinomiya.model3.json");
 
-      model.anchor.set(0.5, 0.5);
+        setStatus("模型載入成功，正在顯示...");
 
-      // 角色位置
-      model.x = window.innerWidth / 2;
-      model.y = window.innerHeight * 0.9;
+        app.stage.addChild(model);
 
-      // 角色大小，太大或太小就改這裡
-      model.scale.set(0.3);
+        model.anchor.set(0.5, 0.5);
+
+        model.x = window.innerWidth / 2;
+        model.y = window.innerHeight / 2;
+
+        // 先用大一點，確定看得到
+        model.scale.set(0.4);
+
+        setStatus("Live2D 顯示完成！");
+      } catch (error) {
+        setStatus(
+          "模型載入失敗：\n\n" +
+          error.message + "\n\n" +
+          "請檢查：\n" +
+          "1. model3.json 路徑是否正確\n" +
+          "2. 檔名大小寫是否一致\n" +
+          "3. moc3 / textures 是否都有上傳\n" +
+          "4. model3.json 內部引用路徑是否正確"
+        );
+
+        console.error(error);
+      }
     }
 
     window.addEventListener("resize", () => {
       if (!model) return;
-
       model.x = window.innerWidth / 2;
-      model.y = window.innerHeight * 0.9;
+      model.y = window.innerHeight / 2;
     });
 
     initLive2D();
