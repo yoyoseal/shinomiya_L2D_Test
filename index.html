@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Live2D Test</title>
+  <title>Live2D</title>
 
   <style>
     html, body {
@@ -12,60 +12,26 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #111;
-      color: #fff;
-      font-family: sans-serif;
-    }
-
-    #status {
-      position: fixed;
-      left: 12px;
-      top: 12px;
-      z-index: 10;
-      padding: 8px 12px;
-      background: rgba(0,0,0,0.75);
-      border: 1px solid #666;
-      font-size: 14px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      max-width: 90vw;
+      background: transparent;
     }
 
     #live2d-canvas {
       width: 100vw;
       height: 100vh;
       display: block;
-      outline: 1px solid #555;
+      background: transparent;
     }
   </style>
 </head>
 
 <body>
-  <div id="status">正在準備 Live2D...</div>
   <canvas id="live2d-canvas"></canvas>
 
   <script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
-
-  <!-- 重點：改成 Cubism4 專用版 -->
   <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism4.min.js"></script>
 
   <script>
-    const statusBox = document.getElementById("status");
-
-    function setStatus(text) {
-      statusBox.textContent = text;
-      console.log(text);
-    }
-
-    window.onerror = function(message, source, lineno, colno, error) {
-      setStatus(
-        "JavaScript 錯誤：\n" +
-        message + "\n\n" +
-        "位置：" + source + ":" + lineno + ":" + colno
-      );
-    };
-
     const modelPath = "./model/shinomiya.model3.json";
 
     let app;
@@ -73,35 +39,6 @@
 
     async function initLive2D() {
       try {
-        setStatus("正在檢查 PIXI...");
-
-        if (!window.PIXI) {
-          throw new Error("PIXI 沒有載入成功。");
-        }
-
-        setStatus(
-          "PIXI 已載入。\n" +
-          "正在檢查 pixi-live2d-display..."
-        );
-
-        if (!PIXI.live2d) {
-          throw new Error(
-            "PIXI.live2d 不存在。\n\n" +
-            "代表 pixi-live2d-display 沒有成功掛上。\n" +
-            "請把 cubism4.min.js 的 CDN 換成 unpkg 版再試。"
-          );
-        }
-
-        if (!PIXI.live2d.Live2DModel) {
-          throw new Error(
-            "PIXI.live2d 存在，但 Live2DModel 不存在。\n\n" +
-            "通常是載入到不合適的版本。\n" +
-            "請確認使用的是 dist/cubism4.min.js，不是 dist/index.min.js。"
-          );
-        }
-
-        setStatus("Live2D 函式庫載入成功，正在建立畫布...");
-
         app = new PIXI.Application({
           view: document.getElementById("live2d-canvas"),
           resizeTo: window,
@@ -109,36 +46,27 @@
           autoStart: true
         });
 
-        setStatus("正在載入模型：\n" + modelPath);
-
         model = await PIXI.live2d.Live2DModel.from(modelPath);
-
-        setStatus("模型載入成功，正在顯示...");
 
         app.stage.addChild(model);
 
         model.anchor.set(0.5, 0.5);
+
+        // 角色位置
         model.x = window.innerWidth / 2;
         model.y = window.innerHeight / 2;
 
+        // 角色大小
         model.scale.set(0.4);
 
-        setStatus("Live2D 顯示完成！");
-
       } catch (error) {
-        setStatus(
-          "載入失敗：\n\n" +
-          error.message + "\n\n" +
-          "目前模型路徑：\n" +
-          modelPath
-        );
-
-        console.error(error);
+        console.error("Live2D 載入失敗：", error);
       }
     }
 
     window.addEventListener("resize", () => {
       if (!model) return;
+
       model.x = window.innerWidth / 2;
       model.y = window.innerHeight / 2;
     });
