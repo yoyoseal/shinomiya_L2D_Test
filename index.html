@@ -44,10 +44,11 @@
   <div id="status">正在準備 Live2D...</div>
   <canvas id="live2d-canvas"></canvas>
 
-  <!-- 載入順序不要換 -->
   <script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
-  <script src="https://unpkg.com/pixi-live2d-display@0.4.0/dist/index.min.js"></script>
+
+  <!-- 重點：改成 Cubism4 專用版 -->
+  <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism4.min.js"></script>
 
   <script>
     const statusBox = document.getElementById("status");
@@ -72,21 +73,34 @@
 
     async function initLive2D() {
       try {
-        setStatus("正在檢查 Live2D 函式庫...");
+        setStatus("正在檢查 PIXI...");
 
         if (!window.PIXI) {
           throw new Error("PIXI 沒有載入成功。");
         }
 
-        if (!PIXI.live2d || !PIXI.live2d.Live2DModel) {
+        setStatus(
+          "PIXI 已載入。\n" +
+          "正在檢查 pixi-live2d-display..."
+        );
+
+        if (!PIXI.live2d) {
           throw new Error(
-            "pixi-live2d-display 沒有正確載入。\n\n" +
-            "目前 PIXI 有載入，但 PIXI.live2d.Live2DModel 不存在。\n" +
-            "請確認 pixi-live2d-display 的 script 是否使用 @0.4.0 固定版本。"
+            "PIXI.live2d 不存在。\n\n" +
+            "代表 pixi-live2d-display 沒有成功掛上。\n" +
+            "請把 cubism4.min.js 的 CDN 換成 unpkg 版再試。"
           );
         }
 
-        setStatus("函式庫載入成功，正在建立畫布...");
+        if (!PIXI.live2d.Live2DModel) {
+          throw new Error(
+            "PIXI.live2d 存在，但 Live2DModel 不存在。\n\n" +
+            "通常是載入到不合適的版本。\n" +
+            "請確認使用的是 dist/cubism4.min.js，不是 dist/index.min.js。"
+          );
+        }
+
+        setStatus("Live2D 函式庫載入成功，正在建立畫布...");
 
         app = new PIXI.Application({
           view: document.getElementById("live2d-canvas"),
@@ -104,12 +118,9 @@
         app.stage.addChild(model);
 
         model.anchor.set(0.5, 0.5);
-
-        // 位置：先放在畫面中央，避免角色跑到畫面外
         model.x = window.innerWidth / 2;
         model.y = window.innerHeight / 2;
 
-        // 大小：太小看不到就改 0.6 / 0.8，太大就改 0.2
         model.scale.set(0.4);
 
         setStatus("Live2D 顯示完成！");
@@ -119,13 +130,7 @@
           "載入失敗：\n\n" +
           error.message + "\n\n" +
           "目前模型路徑：\n" +
-          modelPath + "\n\n" +
-          "請檢查：\n" +
-          "1. CDN 是否固定為 pixi-live2d-display@0.4.0\n" +
-          "2. model/shinomiya.model3.json 是否能直接用網址打開\n" +
-          "3. shinomiya.moc3 是否有上傳\n" +
-          "4. textures/texture_00.png 是否有上傳\n" +
-          "5. model3.json 內部引用路徑是否正確"
+          modelPath
         );
 
         console.error(error);
@@ -134,7 +139,6 @@
 
     window.addEventListener("resize", () => {
       if (!model) return;
-
       model.x = window.innerWidth / 2;
       model.y = window.innerHeight / 2;
     });
